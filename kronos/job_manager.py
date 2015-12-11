@@ -88,15 +88,15 @@ class DrmaaJobManager(object):
             job = DrmaaJob(s, cmd, cmd_args, mem, h_vmem, ncpus, job_name,
                              self.log_dir, self.working_dir, self.qsub_options)
             job_id = s.runJob(job.job_template)
-            print 'job %s ("%s") has been submitted' % (job_id, job.job_name)
+            print 'job {0} ("{1}") has been submitted'.format(job_id, job.job_name)
             self.job_ids.put(job_id)
             
             ## wait for the job
             try:
                 return_code = self.wait(s, job_id)
-                print 'job %s finished with return code %s' % (job_id, return_code)
+                print 'job {0} finished with return code {1}'.format(job_id, return_code)
             except:
-                print 'an error happened in job %s. Deleting the job from the queue...' % (job_id)
+                print 'an error happened in job {0}. Deleting the job from the queue...'.format(job_id)
                 s.control(job_id, self.drmaa.JobControlAction.TERMINATE)
                 raise
             finally:
@@ -248,7 +248,7 @@ class SgeJobManager(object):
         sj = SgeJob(cmd, cmd_args, mem, h_vmem, ncpus, job_name,
                     self.log_dir, self.working_dir, self.qsub_options)
         job_id = self._run_job(sj)
-        print 'Your job %s ("%s") has been submitted' % (job_id, job_name)
+        print 'Your job {0} ("{1}") has been submitted'.format(job_id, job_name)
         self.job_ids.put(job_id)
         
         ## wait for the job
@@ -284,14 +284,14 @@ class SgeJobManager(object):
             sleep(timeout)
             return_code = self.qacct(job_id)
         except JobIdNotFound:
-            print 'qacct failed to get return_code for job_id: %s' % (job_id)
+            print 'qacct failed to get return_code for job_id: {0}'.format(job_id)
             return_code = -2 
         
         return return_code
     
     @staticmethod
     def kill_job(job_id):
-        kill_cmd = 'qdel %s' % (job_id)
+        kill_cmd = 'qdel {0}'.format(job_id)
         os.system(kill_cmd)
         
     def kill_all(self):
@@ -303,14 +303,14 @@ class SgeJobManager(object):
     @staticmethod
     def isinqueue(job_id):
         """check if the job_id is in queue regardless of its state."""
-        cmd = 'qstat -j %s' % (job_id)
+        cmd = 'qstat -j {0}'.format(job_id)
         proc = sub.Popen(cmd, stdout=sub.PIPE, stderr=sub.PIPE, shell=True)
         out, err = proc.communicate()
         return True if proc.returncode == 0 else False
             
     @staticmethod        
     def qacct(job_id):
-        cmd = 'qacct -j %s' % (job_id)
+        cmd = 'qacct -j {0}'.format(job_id)
         proc = sub.Popen(cmd, stdout=sub.PIPE, stderr=sub.PIPE, shell=True)
         out, err = proc.communicate()
         if proc.returncode == 0:
@@ -326,7 +326,8 @@ class SgeJobManager(object):
                 
         return -1 if failed != 0 else exit_status 
 
-    def _run_job(self, job):
+    @staticmethod
+    def _run_job(job):
         """submit the job to the SGE cluster."""
         proc = sub.Popen(job.qcmd, stdout=sub.PIPE, stderr=sub.PIPE,
                          shell=True)
@@ -388,7 +389,7 @@ class LocalJobManager(object):
         job = LocalJob(cmd, cmd_args, job_name)
         proc = sub.Popen(job.cmd, stdout=sub.PIPE, stderr=sub.PIPE, shell=True)
         job_id = proc.pid
-        print 'job %s ("%s") has been launched locally' % (proc.pid, job.job_name)
+        print 'job {0} ("{1}") has been launched locally'.format(proc.pid, job.job_name)
         self.job_ids.append(job_id)
         
         ## wait for the job
@@ -396,22 +397,23 @@ class LocalJobManager(object):
             cmdout, cmderr = proc.communicate()
             self._log_run(job.cmd, cmdout, cmderr, job.job_name, job_id)
         except:
-            print 'an error happened in job %s. Killing the job...' % (job_id)
+            print 'an error happened in job {0}. Killing the job...'.format(job_id)
             self.kill_job(job_id)
             raise
         finally:
             os.chdir(cwdback)
         return proc.returncode
-
-    def kill_job(self, job_id):
+    
+    @staticmethod
+    def kill_job(job_id):
         """kill the job with given job_id."""
-        cmd = "kill %s" % (job_id)
+        cmd = "kill {0}".format(job_id)
         os.system(cmd)
         
     def kill_all(self):
         """kill all the jobs in the queue."""
         for job_id in self.job_ids:
-            cmd = "kill %s" % (job_id)
+            cmd = "kill {0}".format(job_id)
             os.system(cmd)
     
     def _log_run(self, cmd, cmdout, cmderr, job_name, pid):
@@ -426,7 +428,7 @@ class LocalJobManager(object):
         logfile = os.path.join(self.log_dir, logfile)
 
         with open(logfile, 'w') as logfile:
-            logfile.write("#job name: %s with job id: %s\n" % (job_name, pid))
+            logfile.write("#job name: {0} with job id: {1}\n".format(job_name, pid))
             logfile.write("#command\n")
             logfile.write(cmd)
             logfile.write("\n")

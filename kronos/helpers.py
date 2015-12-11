@@ -22,7 +22,7 @@ class JobIdNotFound(Exception):
 
     def __init__(self, job_id):
         self.job_id = job_id
-        self.err_msg = 'job id not found: %s' % (job_id)
+        self.err_msg = 'job id not found: {0}'.format(job_id)
 
 class JobFailureError(Exception):
 
@@ -149,8 +149,10 @@ class Tree(object):
                 if isinstance(v, Tree):
                     d[k] = dict()
                     _todict(v, d[k])
+                    break
                 else:
                     d[k] = v
+                    break
             else:
                 return d
 
@@ -178,7 +180,7 @@ class Tree(object):
         return reduce(lambda t,k: t[k], path.nodes, self)
 
     def empty(self):
-        if len(self):
+        if self:
             return False
         return True
     
@@ -192,8 +194,10 @@ class Tree(object):
             for k,v in d.iteritems():
                 if isinstance(v, dict):
                     _dict2tree(v, t[k])
+                    break
                 else:
                     t[k] = v
+                    break
             else:
                 return t
 
@@ -253,8 +257,10 @@ class OrderedTree(Tree):
                 if isinstance(v, OrderedTree):
                     d[k] = OrderedDict()
                     _todict(v, d[k])
+                    break
                 else:
                     d[k] = v
+                    break
             else:
                 return d
 
@@ -352,7 +358,7 @@ class Configurer(object):
             while l:
                 l = l.strip().split('\t')
                 if len(header) != len(l):
-                    raise Exception("too many/few items on line %s" % l)
+                    raise Exception("too many/few items on line {0}".format(l))
                 for k,v in zip(header[1:], l[1:]):
                     v = evaluate_variable(v)
                     t.add_path(t.dict2tree({l[0]:{k:v}}))
@@ -382,7 +388,7 @@ class Configurer(object):
             while l:
                 l = l.strip().split('\t')
                 if len(header) != len(l):
-                    raise Exception("too many/few items on line %s" % l)
+                    raise Exception("too many/few items on line {0}".format(l))
                 ## this is for the sake of backward compatibility with 
                 ## existing setup files. 
                 if l[0] == '__OPTIONS__':
@@ -440,7 +446,7 @@ class Configurer(object):
             raise ConfigError(config_file +' Config file is empty')
         
         return config_dict
-               
+                
     @staticmethod 
     def _get_info_section_config_dict():
         """create the config dict for PIPELINE_INFO section."""
@@ -587,7 +593,7 @@ class KeywordsManager(object):
         try:
             res = t.substitute(**self.keywords)
         except KeyError as e:
-            print >> sys.stderr, 'unrecognized keyword in the config file: %s' % ('$' + e.message)
+            print >> sys.stderr, 'unrecognized keyword in the config file: {0}'.format('$' + e.message)
         return res
 
 
@@ -647,7 +653,7 @@ def kill_jobs(q):
     """kill all the jobs in the queue."""
     while not q.empty():
         job_id = q.get()
-        cmd = "kill %s" % (job_id)
+        cmd = "kill {0}".format(job_id)
         os.system(cmd)
 
 
@@ -662,9 +668,8 @@ def flushqueue(q):
 
 def export_to_environ(path, envar):
     """ export path to envar environment variable."""
-    if os.environ.get(envar):
-        if path not in os.environ[envar].split(':'):
-            os.environ[envar] = path + ':' + os.environ[envar]
+    if os.environ.get(envar) and path not in os.environ[envar].split(':'):
+        os.environ[envar] = path + ':' + os.environ[envar]
 
     else:
         os.environ[envar] = path

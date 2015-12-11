@@ -25,7 +25,8 @@ class PipelineLogger(object):
         self.verbose = verbose
 
 
-    def get_logger(self, logger_name, log_file):
+    @staticmethod
+    def get_logger(logger_name, log_file):
         '''
         Returns a shared logger and proxy
         '''
@@ -202,7 +203,7 @@ class LogWarnErr(PipelineLogger):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             w = filter(lambda i: issubclass(i.category, UserWarning), w)
-            if len(w):
+            if w:
                 self.log_warning(self.l, message.strip())
 
             else:

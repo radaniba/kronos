@@ -5,7 +5,7 @@ Created on Sep 9, 2014
 """
 
 import sys
-from helpers import *
+import helpers
 from warnings import warn
 
 class Connection(object):
@@ -255,7 +255,7 @@ class WorkFlowNode(object):
             return 
         for i, chunk in enumerate(self.chunks):
             newn = self.copy()
-            newn.tag = self.tag + '_%s_' % (i + 1)
+            newn.tag = self.tag + '_{0!s}_'.format((i + 1))
             newn.parent = self
             newn.chunk = chunk
             newn.forced_dependencies = self.forced_dependencies
@@ -373,11 +373,12 @@ class Paralleler(object):
     parallelize/synchronize a node.
     """
     
-    def expand(self, node, number_of_children):
+    @staticmethod
+    def expand(node, number_of_children):
         """spawn children nodes."""
         for i in range(number_of_children):
             newn = node.copy()
-            newn.tag = node.tag + '%s_' % i
+            newn.tag = node.tag + '{0!s}_'.format(i)
             newn.parent = node
             newn.chunk = node.chunks[i]
             newn.forced_dependencies = node.forced_dependencies
@@ -395,8 +396,9 @@ class Paralleler(object):
         self._update_children_io_connections(node, p, param)
         node.parallelized = True       
         return node
-
-    def _update_children_io_connections(self, node, p, param):
+    
+    @staticmethod
+    def _update_children_io_connections(node, p, param):
         """update the io_connections of node's children from p via param"""
         for i, child in enumerate(node.children):
             iocs = []
@@ -507,7 +509,7 @@ class WorkFlow(object):
                 yield n.tag
             else:
                 new_nodes.append(n)
-        if len(new_nodes):
+        if new_nodes:
             for tag in self.bfs(new_nodes, visited):
                 yield tag 
     
@@ -620,7 +622,7 @@ class WorkFlow(object):
         """add breakpoint nodes to workflow."""
         for node in self.nodes.values():
             if node.breakpoint:
-                bptag = "__BREAK_POINT_%s__" % (node.tag)
+                bptag = "__BREAK_POINT_{0!s}__".format((node.tag))
                 self._add_breakpoint(bptag, node.tag)
 
     def get_samples(self):
@@ -641,12 +643,12 @@ class WorkFlow(object):
                 
                 if c.start_node == '__SAMPLES__':
                     if not self.samples_section:
-                        msg = "sample connection used while empty SAMPLES section, %s" % (c) 
+                        msg = "sample connection used while empty SAMPLES section, {0!s}".format((c)) 
                         raise Exception(msg)
                     value = self._get_value_from_section_samples(sample_id, c.start_param)
                 elif c.start_node == '__SHARED__':
                     if not self.shared_section:
-                        msg = "shared connection used while empty SHARED section, %s" % (c)
+                        msg = "shared connection used while empty SHARED section, {0!s}".format((c))
                         raise Exception(msg)
                     value = self._get_value_from_section_shared(c.start_param)
 
@@ -661,7 +663,7 @@ class WorkFlow(object):
         try:
             value = self.samples_section[sample_id][param]
         except KeyError:
-            msg = "bad connection: %s is not a key in SAMPLES section." % (param) 
+            msg = "bad connection: {0!s} is not a key in SAMPLES section.".format((param)) 
             print >> sys.stderr, msg
             
         return value
@@ -671,7 +673,7 @@ class WorkFlow(object):
         try:
             value = self.shared_section[param]
         except KeyError:
-            msg = "bad connection: %s is not a key in SHARED section." % (param) 
+            msg = "bad connection: {0!s} is not a key in SHARED section.".format((param)) 
             print >> sys.stderr, msg
             
         return value    
@@ -690,7 +692,8 @@ class WorkFlowManager(object):
         """create a yaml config file."""
         config_dict = self.configurer.make_config_dict(component_names)
         self.configurer.print2yaml(config_dict, config_file_name)
-        
-    def add_workflow(self, config_file):
+    
+    @staticmethod    
+    def add_workflow(config_file):
         """add a new workflow for the given config file."""
         wf = WorkFlow(config_file)

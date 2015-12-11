@@ -43,7 +43,7 @@ class Plumber(object):
                                   for k in self.component_names if k != 'breakpoint'}
 
     def make_script(self, sample_id):
-        logging.info('making pipeline for %s ...' % (sample_id))
+        logging.info('making pipeline for {0} ...'.format(sample_id))
         
         import_pymod   = {
                           'os' :[],
@@ -343,14 +343,14 @@ class Plumber(object):
                 self.pipeline_script.write('\n')
 
         except:
-            raise Exception("failed to write to %s" % self.pipeline_script)
+            raise Exception("failed to write to {0!s}".format(self.pipeline_script))
 
 
     def  _write_importing(self, import_dict, comment='import modules'):
         self._print(comment=comment)
 
         for k, v in import_dict.iteritems():
-            if len(v) == 0:
+            if not v:
                 self._print(message = "import {0}".format(k))
 
             else:
@@ -428,7 +428,7 @@ class Plumber(object):
         for i, l in enumerate(leafs):
             l = self.wf.nodes[l].component_name + '_' + l
             leafs[i] = l 
-            leaf_nodes_str += "{%s}_function, " % (i)
+            leaf_nodes_str += "{{{0!s}}}_function, ".format((i))
 
         leaf_nodes_str = leaf_nodes_str.format(*leafs)
 

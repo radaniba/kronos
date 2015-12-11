@@ -1,0 +1,4 @@
+build/*
+working_dir/*
+dist/*
+kronos_pipeliner.egg-info/*

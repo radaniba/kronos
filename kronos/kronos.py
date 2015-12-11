@@ -82,13 +82,13 @@ class Factory(object):
 		cmd += "-n {num_pipelines} -p {python_installation} -w {working_dir}"
 		cmd = cmd.format(**vars(self.args))
 		if self.args.qsub_options:
-			cmd += " -q '%s'" % (self.args.qsub_options)
+			cmd += " -q '{0}' ".format(self.args.qsub_options)
 		if self.args.run_id:
-			cmd += " -r '%s'" % (self.args.run_id)
+			cmd += " -r '{0}' ".format(self.args.run_id)
 		if self.args.pipeline_name:
-		    cmd += " -e '%s'" % (self.args.pipeline_name) 
+		    cmd += " -e '{0}'".format(self.args.pipeline_name) 
 		
-		logging.info('running the command: %s' % (cmd))
+		logging.info('running the command: {0}'.format(cmd))
 		proc = sub.Popen(cmd, stdout=sub.PIPE, stderr=sub.PIPE, shell=True)
 		cmdout, cmderr = proc.communicate()
 		if cmdout:
@@ -125,7 +125,8 @@ class Factory(object):
 		p = self._make_pipeline(pipeline_name, config_file, intermediate_dir, sample_id)
 		self.pipelines.append(p)
 
-	def _make_pipeline(self, pipeline_name, config_file, script_dir, sample_id):
+	@staticmethod
+	def _make_pipeline(pipeline_name, config_file, script_dir, sample_id):
 		p = Pipeline(pipeline_name = pipeline_name,
 					 config_file   = config_file,
 					 script_dir    = script_dir,
@@ -169,10 +170,10 @@ class Factory(object):
 		def _make_new_file_and_replace_comp_name(template_file, comp_name):
 			with open(template_file, 'r') as tf:
 				new_filename = os.path.basename(template_file)
-				new_file = open(os.path.join(comp_path, new_filename), 'w')
-				t = Template(tf.read())
-				new_file.write(t.substitute(COMPONENT_NAME=comp_name))
-				new_file.close()
+				with open(os.path.join(comp_path, new_filename), 'w') as new_file:
+				    t = Template(tf.read())
+				    new_file.write(t.substitute(COMPONENT_NAME=comp_name))
+				 
 				
 		package_path = os.path.dirname(os.path.realpath(__file__))
 		templates_path = os.path.join(package_path, '../templates')
@@ -189,8 +190,8 @@ class Factory(object):
 		_make_new_file_and_replace_comp_name(component_params, comp_name)
 		
 		## create the __init__.py inside the component package
-		init_file = open(os.path.join(comp_path, '__init__.py'), 'w')
-		init_file.close()
+		with open(os.path.join(comp_path, '__init__.py'), 'w') as init_file:
+		    pass
 		
 def main():
 	import kronosui

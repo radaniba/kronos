@@ -73,13 +73,15 @@ class ComponentAbstract(object):
         ljm = LocalJobManager()
         ljm.run_job(cmd, cmd_args, self.component_name)
     
-    def focus(self, cmd, cmd_args, chunk):
+    @staticmethod
+    def focus(cmd, cmd_args):
         "update the cmd and cmd_args for each chunk."
         
         raise NotImplementedError("focus method called before implementation")
         return cmd, cmd_args
     
-    def make_cmd(self, chunk=None):
+    @staticmethod
+    def make_cmd():
         """make a command."""
         cmd = None
         cmd_args = None
@@ -87,7 +89,8 @@ class ComponentAbstract(object):
         raise NotImplementedError("make_cmd method called before implementation")
         return cmd, cmd_args
     
-    def test(self):
+    @staticmethod
+    def test():
         """run unittest of the component."""
         raise NotImplementedError("test method called before implementation")  
 
@@ -170,7 +173,8 @@ class Task(object):
                     args_dict[param] = dirname
         os.chdir(wd)
 
-    def _make_dirs(self, path):
+    @staticmethod
+    def _make_dirs(path):
         """make dirs using os.makedirs"""
         if not path:
             return
@@ -238,13 +242,6 @@ class Pipeline(object):
             self.kill()
             raise
 
-    def kill(self):
-        """kill all the jobs."""
-        pass
-
-    def add_component(self, component_name, component_parent_dir):
-        pass
-
     def add_task(self, task_name, component):
         """add task object to the list of tasks."""
         task = Task(task_name, component)
@@ -255,8 +252,9 @@ class Pipeline(object):
         components in the pipeline.
         """
         return self.tasks['root'].input_files
-
-    def update_pipeline_script_args(self, args_namespace):
+    
+    @staticmethod
+    def update_pipeline_script_args(args_namespace):
         """update args namespace of the pipeline script."""
         ## change the Namespace object to dictionary
         args_dict = vars(args_namespace)
@@ -267,27 +265,6 @@ class Pipeline(object):
         
         args_dict.update(kwargs)
 
-    def update_components_args(self):
-        """update all the arguments of all the components in the pipeline.
-        It is equivalent to running __TASK___task.update_comp_args()
-        method over each of the components in the pipeline.
-        """
-        pass
-
-    def update_components_reqs(self):
-        """update all the requirements of all the components in the pipeline.
-        It is equivalent to running __TASK___task.update_comp_reqs()
-        method over each of the components in the pipeline.
-        """
-        pass
-
-    def import_python_modules(self):
-        """import required python modules for the pipeline to run."""    
-        pass
-
-    def import_factory_modules(self):
-        """import required factory modules for the pipeline to run."""
-        pass
 
     def set_start_task(self, task_name):
         self.start_task = self.tasks[task_name]

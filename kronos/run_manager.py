@@ -40,8 +40,8 @@ class RunManager(object):
         self.scripts_dir   = self._make_dir('scripts')
         self.sentinels_dir = self._make_dir('sentinels')
 
-
-    def get_filename_prefix(self, task_name):
+    @staticmethod
+    def get_filename_prefix(task_name):
 #         return '_'.join([component_name, task_name, self.pipeline_name, self.run_id])
         return task_name.strip('_')
 
@@ -66,7 +66,7 @@ class RunManager(object):
         return file_name
 
 
-    def sentinel_file_exists(self, component_name, task_name, predecessor_task_names):
+    def sentinel_file_exists(self, task_name, predecessor_task_names):
         curr_sentinel_file = self.get_sentinel_file_name(task_name)
         
         ## check if all the predecessor sentinel files exist and record
@@ -75,20 +75,20 @@ class RunManager(object):
         for ptn in predecessor_task_names:
             filename = self.get_sentinel_file_name(ptn)
             if not os.path.exists(filename):
-                return False, "Missing predecessor sentinel file %s" % filename
+                return False, "Missing predecessor sentinel file {0}".format(filename)
             mtimes.append(os.path.getmtime(filename))
 
         if not os.path.exists(curr_sentinel_file) :
-            return True, "Missing sentinel file %s" % curr_sentinel_file
+            return True, "Missing sentinel file {0!s}".format(curr_sentinel_file)
         
         else:
             ## check if the current sentinel is older than any of 
             ## the predecessor sentinels
             curr_mt = os.path.getmtime(curr_sentinel_file)
             if any(map(lambda mt: mt > curr_mt, mtimes)):
-                return True, "Outdated sentinel file %s" % curr_sentinel_file
+                return True, "Outdated sentinel file {0}".format(curr_sentinel_file)
             else:
-                return False, "Up-to-date sentinel files exist for task %s" % task_name
+                return False, "Up-to-date sentinel files exist for task {0}".format(task_name)
         
 
     def generate_sentinel_file(self, task_name):
@@ -126,17 +126,19 @@ class RunManager(object):
         os.chmod(file_name, 0755)
 
         return os.path.abspath(file_name)
-
-    def _write_env_vars(self, env_vars, out_stream):
+    
+    @staticmethod
+    def _write_env_vars(env_vars, out_stream):
         for k, v in env_vars.iteritems():
             if isinstance(v, list):
                 for vi in v:
-                    out_stream.write('export %s=%s:$%s\n' % (k, vi, k))
+                    out_stream.write('export {0!s}={1!s}:${2!s}\n'.format(k, vi, k))
 
             else:
-                out_stream.write('export %s=%s:$%s\n' % (k, v, k))
+                out_stream.write('export {0!s}={1!s}:${2!s}\n'.format(k, v, k))
     
-    def _write_boilerplate(self, boilerplate, out_stream):
+    @staticmethod
+    def _write_boilerplate(boilerplate, out_stream):
         if os.path.isfile(boilerplate):
             with open(boilerplate, 'r') as bp:
                 lines = bp.readlines()
@@ -144,8 +146,9 @@ class RunManager(object):
         else:
             out_stream.write(boilerplate)
         out_stream.write('\n')
-
-    def _get_run_id(self):
+    
+    @staticmethod
+    def _get_run_id():
         return datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
 
